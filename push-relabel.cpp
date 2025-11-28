@@ -309,11 +309,11 @@ void showRealWorldMenu() {
     };
 
     vector<DatasetInfo> datasets = {
-        {"Wikipedia Vote", "wiki-Vote.txt", "https://snap.stanford.edu/data/wiki-Vote.txt.gz", "Nodes: ~7k, Edges: ~103k. Who votes for whom."},
-        {"Gnutella P2P", "p2p-Gnutella08.txt", "https://snap.stanford.edu/data/p2p-Gnutella08.txt.gz", "Nodes: ~6k, Edges: ~20k. Peer-to-peer network."},
-        {"Facebook Social", "facebook_combined.txt", "https://snap.stanford.edu/data/facebook_combined.txt.gz", "Nodes: ~4k, Edges: ~88k. Social circles."},
-        {"Scientific Collaboration", "ca-GrQc.txt", "https://snap.stanford.edu/data/ca-GrQc.txt.gz", "Nodes: ~5k, Edges: ~14k. General Relativity authors."},
-        {"Email-Eu-core", "email-Eu-core.txt", "https://snap.stanford.edu/data/email-Eu-core.txt.gz", "Nodes: ~1k, Edges: ~25k. Departmental email traffic."}
+        {"Wikipedia Vote", "real-world-datasets/wiki-Vote.txt", "https://snap.stanford.edu/data/wiki-Vote.txt.gz", "Nodes: ~7k, Edges: ~103k. Who votes for whom."},
+        {"Gnutella P2P", "real-world-datasets/p2p-Gnutella08.txt", "https://snap.stanford.edu/data/p2p-Gnutella08.txt.gz", "Nodes: ~6k, Edges: ~20k. Peer-to-peer network."},
+        {"Facebook Social", "real-world-datasets/facebook_combined.txt", "https://snap.stanford.edu/data/facebook_combined.txt.gz", "Nodes: ~4k, Edges: ~88k. Social circles."},
+        {"Scientific Collaboration", "real-world-datasets/ca-GrQc.txt", "https://snap.stanford.edu/data/ca-GrQc.txt.gz", "Nodes: ~5k, Edges: ~14k. General Relativity authors."},
+        {"Email-Eu-core", "real-world-datasets/email-Eu-core.txt", "https://snap.stanford.edu/data/email-Eu-core.txt.gz", "Nodes: ~1k, Edges: ~25k. Departmental email traffic."}
     };
 
     while(true) {
