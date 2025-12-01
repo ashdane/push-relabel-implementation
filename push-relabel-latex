@@ -125,28 +125,4 @@ Upon termination of the Push-Relabel algorithm, we extract the Minimum Cut using
     \item The Minimum Cut consists of all edges $(u, v)$ in the original graph such that $u \in S$ and $v \in T$.
 \end{enumerate}
 
-\subsection{Verification Results}
-We tested the implementation on $N=1000$ synthetic flow networks. In every instance, the computed Maximum Flow value equaled the sum of the capacities of the edges in the extracted Minimum Cut.
-
-% TABLE: Replace these numbers with your actual C++ output
-\begin{table}[h]
-\centering
-\caption{Max-Flow vs. Min-Cut Capacity Verification (Sample Data)}
-\label{tab:mincut-verification}
-\begin{tabular}{@{}ccccc@{}}
-\toprule
-\textbf{Graph Size ($|V|$)} & \textbf{Density} & \textbf{Max Flow (Computed)} & \textbf{Min-Cut Capacity} & \textbf{Discrepancy} \\ \midrule
-50 & Sparse & 450 & 450 & 0 \\
-50 & Dense & 12,400 & 12,400 & 0 \\
-500 & Sparse & 3,215 & 3,215 & 0 \\
-500 & Dense & 89,550 & 89,550 & 0 \\ \bottomrule
-\end{tabular}
-\end{table}
-
-The consistency of these results ($Discrepancy = 0$) confirms the correctness of our Push-Relabel implementation and empirically validates the theorem.
-
-% ==========================================
-% END OF YOUR SECTION
-% ==========================================
-
 \end{document}
