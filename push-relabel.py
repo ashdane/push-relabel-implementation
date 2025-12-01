@@ -1,4 +1,5 @@
 import sys
+import time
 from collections import deque
 from typing import List, Optional
 
@@ -33,10 +34,6 @@ class PushRelabel:
 
     def enqueue(self, v: int):
         """Adds a node to the active queue if it has positive excess and isn't already active."""
-        # Note: In the C++ version, active is not set for source/sink, 
-        # but here we rely on the main loop to check if u == s or u == t.
-        # The C++ code's constructor initializes active[s] and active[t] to true.
-        # We will handle s and t exclusion in getMaxFlow/discharge.
         if not self.active[v] and self.excess[v] > 0:
             self.active[v] = True
             self.Q.append(v)
@@ -45,9 +42,6 @@ class PushRelabel:
         """Pushes flow from node u to e.to across edge e."""
         amt: int = min(self.excess[u], e.cap - e.flow)
         
-        # Optimization check from C++:
-        # if self.dist[u] <= self.dist[e.to] or amt == 0: return
-
         if amt == 0:
             return
 
@@ -133,21 +127,13 @@ class PushRelabel:
             return 0
         
         # Initialization
-        # Set initial distances for s and t
         self.dist[s] = self.n
-        # Initialize count array for distances
-        self.count[0] = self.n - 1  # All nodes except s start at dist 0
-        self.count[self.n] = 1      # Source s starts at dist n
-        
-        # The C++ code initializes active[s] and active[t] to true to prevent them 
-        # from being added to the queue later via enqueue, but we skip them
-        # in the main loop instead for clarity.
+        self.count[0] = self.n - 1 
+        self.count[self.n] = 1     
         
         # Initial push from source s
         for edge in self.adj[s]:
             self.excess[s] += edge.cap
-            # 'Push' initial flow (push logic handles capacity check and enqueue)
-            # We bypass the height check here as we are initializing the preflow
             amt = edge.cap
             
             if amt == 0:
@@ -155,22 +141,20 @@ class PushRelabel:
 
             edge.flow += amt
             self.adj[edge.to][edge.rev].flow -= amt
-            self.excess[s] -= amt # This will be 0 after all initial pushes
+            self.excess[s] -= amt
             self.excess[edge.to] += amt
             self.enqueue(edge.to)
             
         # Main loop: process active nodes
         while self.Q:
             u: int = self.Q.popleft()
-            self.active[u] = False # Mark as inactive
+            self.active[u] = False 
             
-            # Source and Sink should not be discharged
             if u == s or u == t:
                 continue
             
             self.discharge(u, s, t)
             
-        # The max flow is the total excess flow leaving the source (or entering the sink)
         flow: int = 0
         for edge in self.adj[s]:
             flow += edge.flow
@@ -179,84 +163,91 @@ class PushRelabel:
 
 
 def main():
-    """Reads graph definition from standard input (DIMACS-like format) and computes max-flow."""
-    # Using a list to store the solver instance, equivalent to C++ pointer
+    """
+    Reads graph definition from a file provided as an argument 
+    (or stdin if no argument is provided) and computes max-flow.
+    """
+    
+    # Start timing
+    start_time = time.time()
+
     solver: Optional[PushRelabel] = None
     s: int = -1  # Source node (0-indexed)
     t: int = -1  # Sink node (0-indexed)
 
-    # Read all lines from standard input
-    for line in sys.stdin:
-        # C++ getline reads until newline, then stringstream parses the line
-        line = line.strip()
-        if not line:
-            continue
-        
-        parts = line.split()
-        if not parts:
-            continue
+    # Determine input source: file argument or stdin
+    if len(sys.argv) > 1:
+        try:
+            # Open the file provided in the first argument
+            input_source = open(sys.argv[1], 'r')
+        except FileNotFoundError:
+            sys.stderr.write(f"Error: File '{sys.argv[1]}' not found.\n")
+            sys.exit(1)
+    else:
+        # Default to standard input
+        input_source = sys.stdin
+
+    # Read from the determined source
+    with input_source:
+        for line in input_source:
+            line = line.strip()
+            if not line:
+                continue
             
-        type_char = parts[0]
-        
-        if type_char == 'c':
-            # Comment line, ignore
-            continue
-        elif type_char == 'p':
-            # Problem line: p <format> <num_nodes> <num_edges>
-            if len(parts) >= 4:
-                # format = parts[1] (usually 'max')
-                try:
-                    num_nodes = int(parts[2])
-                    # num_edges = int(parts[3])
-                    solver = PushRelabel(num_nodes)
-                except ValueError:
-                    sys.stderr.write("Error parsing 'p' line: nodes/edges not integers.\n")
-                    return
-        elif type_char == 'n':
-            # Node line: n <id> <type>
-            # <id> is 1-based index, <type> is 's' (source) or 't' (sink)
-            if len(parts) >= 3 and solver:
-                try:
-                    node_id = int(parts[1])
-                    node_type = parts[2]
-                    
-                    # Convert 1-based index to 0-based
-                    if node_type == 's':
-                        s = node_id - 1
-                    elif node_type == 't':
-                        t = node_id - 1
-                except ValueError:
-                    sys.stderr.write("Error parsing 'n' line: id not integer.\n")
-                    return
-        elif type_char == 'a':
-            # Arc line: a <u> <v> <cap>
-            # u, v are 1-based indices
-            if len(parts) >= 4 and solver:
-                try:
-                    u = int(parts[1])
-                    v = int(parts[2])
-                    cap = int(parts[3]) # Capacity is expected to be a long long in C++, so use int in Python
-                    
-                    # Convert 1-based indices to 0-based
-                    solver.addEdge(u - 1, v - 1, cap)
-                except ValueError:
-                    sys.stderr.write("Error parsing 'a' line: u, v, or cap not integers.\n")
-                    return
+            parts = line.split()
+            if not parts:
+                continue
+                
+            type_char = parts[0]
+            
+            if type_char == 'c':
+                continue
+            elif type_char == 'p':
+                if len(parts) >= 3:
+                    try:
+                        num_nodes = int(parts[2])
+                        solver = PushRelabel(num_nodes)
+                    except ValueError:
+                        sys.stderr.write("Error parsing 'p' line.\n")
+                        return
+            elif type_char == 'n':
+                if len(parts) >= 3 and solver:
+                    try:
+                        node_id = int(parts[1])
+                        node_type = parts[2]
+                        if node_type == 's':
+                            s = node_id - 1
+                        elif node_type == 't':
+                            t = node_id - 1
+                    except ValueError:
+                        sys.stderr.write("Error parsing 'n' line.\n")
+                        return
+            elif type_char == 'a':
+                if len(parts) >= 4 and solver:
+                    try:
+                        u = int(parts[1])
+                        v = int(parts[2])
+                        cap = int(parts[3])
+                        solver.addEdge(u - 1, v - 1, cap)
+                    except ValueError:
+                        sys.stderr.write("Error parsing 'a' line.\n")
+                        return
 
     # Calculate and output the max flow
     if solver and s != -1 and t != -1:
         max_flow = solver.getMaxFlow(s, t)
-        print(max_flow)
+        print(f"Max Flow: {max_flow}")
     elif solver:
-        # Error output for missing s or t
         sys.stderr.write("Error: Source (s) or Sink (t) not defined in input.\n")
     else:
-        # Error output for missing 'p' line
         sys.stderr.write("Error: Problem definition ('p' line) not found in input.\n")
 
+    # End timing
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    
+    # Print time to stderr
+    sys.stderr.write(f"Total time taken: {elapsed_time:.6f} seconds\n")
 
 if __name__ == "__main__":
-    # In C++, the stream synchronization is disabled for faster I/O.
-    # In Python, reading from sys.stdin line-by-line is generally efficient.
-    # The main execution is placed inside a function for better structure.
     main()
